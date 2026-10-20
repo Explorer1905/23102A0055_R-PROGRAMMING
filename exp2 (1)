@@ -1,0 +1,530 @@
+
+R version 4.6.1 (2026-06-24 ucrt) -- "Happy Hop"
+Copyright (C) 2026 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> cat("\nCleaning completed successfully.\n")
+
+Cleaning completed successfully.
+> cat("\nCleaning completed successfully.\n")
+
+Cleaning completed successfully.
+> # ============================================================
+> # LAB 3: CONTROL FLOW FOR DATA CLEANING
+> # Topic: Loops, Functions, and Error Handling in R
+> # Dataset: UCI Heart Disease Dataset
+> # ============================================================
+> 
+> 
+> # ------------------------------------------------------------
+> # 1. INSTALL / LOAD REQUIRED PACKAGES
+> # ------------------------------------------------------------
+> 
+> # Run these only once if packages are not installed
+> # install.packages("dplyr")
+> 
+> library(dplyr)
+Error in library(dplyr) : there is no package called ‘dplyr’
+> 
+> 
+> # ------------------------------------------------------------
+> # 2. LOAD UCI HEART DISEASE DATASET
+> # ------------------------------------------------------------
+> 
+> url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data"
+> 
+> heart <- read.csv(
++   url,
++   header = FALSE,
++   na.strings = "?"
++ )
+> 
+> # Add column names
+> colnames(heart) <- c(
++   "age",
++   "sex",
++   "cp",
++   "trestbps",
++   "chol",
++   "fbs",
++   "restecg",
++   "thalach",
++   "exang",
++   "oldpeak",
++   "slope",
++   "ca",
++   "thal",
++   "target"
++ )
+> 
+> # Display first few rows
+> head(heart)
+  age sex cp trestbps chol fbs restecg thalach exang oldpeak slope ca thal
+1  63   1  1      145  233   1       2     150     0     2.3     3  0    6
+2  67   1  4      160  286   0       2     108     1     1.5     2  3    3
+3  67   1  4      120  229   0       2     129     1     2.6     2  2    7
+4  37   1  3      130  250   0       0     187     0     3.5     3  0    3
+5  41   0  2      130  204   0       2     172     0     1.4     1  0    3
+6  56   1  2      120  236   0       0     178     0     0.8     1  0    3
+  target
+1      0
+2      2
+3      1
+4      0
+5      0
+6      0
+> 
+> # Check structure
+> str(heart)
+'data.frame':   303 obs. of  14 variables:
+ $ age     : num  63 67 67 37 41 56 62 57 63 53 ...
+ $ sex     : num  1 1 1 1 0 1 0 0 1 1 ...
+ $ cp      : num  1 4 4 3 2 2 4 4 4 4 ...
+ $ trestbps: num  145 160 120 130 130 120 140 120 130 140 ...
+ $ chol    : num  233 286 229 250 204 236 268 354 254 203 ...
+ $ fbs     : num  1 0 0 0 0 0 0 0 0 1 ...
+ $ restecg : num  2 2 2 0 2 0 2 0 2 2 ...
+ $ thalach : num  150 108 129 187 172 178 160 163 147 155 ...
+ $ exang   : num  0 1 1 0 0 0 0 1 0 1 ...
+ $ oldpeak : num  2.3 1.5 2.6 3.5 1.4 0.8 3.6 0.6 1.4 3.1 ...
+ $ slope   : num  3 2 2 3 1 1 3 1 2 3 ...
+ $ ca      : num  0 3 2 0 0 0 2 0 1 0 ...
+ $ thal    : num  6 3 7 3 3 3 3 3 7 7 ...
+ $ target  : int  0 2 1 0 0 0 3 0 2 1 ...
+> 
+> # Check dimensions
+> dim(heart)
+[1] 303  14
+> 
+> 
+> # ------------------------------------------------------------
+> # 3. INTRODUCE ARTIFICIAL DATA-ENTRY ERRORS
+> # ------------------------------------------------------------
+> 
+> # We deliberately introduce:
+> # - Negative BP values
+> # - Missing BP values
+> # - Extreme BP values (>300)
+> 
+> set.seed(123)
+> 
+> heart$trestbps[1] <- -20
+> heart$trestbps[2] <- -50
+> heart$trestbps[3] <- NA
+> heart$trestbps[4] <- 320
+> heart$trestbps[5] <- 350
+> 
+> cat("Artificial invalid values introduced.\n")
+Artificial invalid values introduced.
+> 
+> # Display affected rows
+> heart[1:5, c("age", "trestbps", "chol")]
+  age trestbps chol
+1  63      -20  233
+2  67      -50  286
+3  67       NA  229
+4  37      320  250
+5  41      350  204
+> 
+> 
+> # ------------------------------------------------------------
+> # 4. CREATE BP CLEANING FUNCTION USING IF-ELSE
+> # ------------------------------------------------------------
+> 
+> clean_bp <- function(bp) {
++ 
++   if (is.na(bp)) {
++     return(NA)
++   }
++ 
++   else if (bp < 0) {
++     return(NA)
++   }
++ 
++   else if (bp > 250) {
++     return(250)
++   }
++ 
++   else {
++     return(bp)
++   }
++ }
+> 
+> 
+> # Test function
+> print(clean_bp(-20))
+[1] NA
+> print(clean_bp(120))
+[1] 120
+> print(clean_bp(320))
+[1] 250
+> print(clean_bp(NA))
+[1] NA
+> 
+> 
+> # ------------------------------------------------------------
+> # 5. APPLY FUNCTION TO BP COLUMN
+> # ------------------------------------------------------------
+> 
+> heart$trestbps_clean <- sapply(
++   heart$trestbps,
++   clean_bp
++ )
+> 
+> # Display original and cleaned values
+> head(
++   heart[, c("trestbps", "trestbps_clean")],
++   10
++ )
+   trestbps trestbps_clean
+1       -20             NA
+2       -50             NA
+3        NA             NA
+4       320            250
+5       350            250
+6       120            120
+7       140            140
+8       120            120
+9       130            130
+10      140            140
+> 
+> 
+> # ------------------------------------------------------------
+> # 6. ERROR HANDLING USING tryCatch()
+> # ------------------------------------------------------------
+> 
+> safe_mean_bp <- function(bp) {
++ 
++   tryCatch({
++ 
++     if (length(bp) == 0) {
++       stop("BP vector is empty.")
++     }
++ 
++     if (all(is.na(bp))) {
++       stop("BP vector contains only missing values.")
++     }
++ 
++     mean(bp, na.rm = TRUE)
++ 
++   },
++ 
++   warning = function(w) {
++     message("Warning while calculating mean BP: ", w$message)
++     NA
++   },
++ 
++   error = function(e) {
++     message("Error while calculating mean BP: ", e$message)
++     NA
++   },
++ 
++   finally = {
++     message("Mean BP calculation completed.")
++   })
++ }
+> 
+> 
+> # Calculate mean BP
+> mean_bp <- safe_mean_bp(heart$trestbps_clean)
+Mean BP calculation completed.
+> 
+> cat("Mean BP =", mean_bp, "\n")
+Mean BP = 132.39 
+> 
+> 
+> # ------------------------------------------------------------
+> # 7. CALCULATE CHOLESTEROL / BP RATIO
+> # ------------------------------------------------------------
+> 
+> safe_ratio <- function(chol, bp) {
++ 
++   tryCatch({
++ 
++     # Check for missing values
++     if (is.na(chol) || is.na(bp)) {
++       stop("Cholesterol or BP value is missing.")
++     }
++ 
++     # Check for zero denominator
++     if (bp == 0) {
++       stop("Cannot divide by zero BP.")
++     }
++ 
++     # Check for invalid values
++     if (bp < 0) {
++       stop("BP value is invalid.")
++     }
++ 
++     ratio <- chol / bp
++ 
++     return(ratio)
++ 
++   },
++ 
++   error = function(e) {
++     message("Ratio Error: ", e$message)
++     return(NA)
++   },
++ 
++   warning = function(w) {
++     message("Ratio Warning: ", w$message)
++     return(NA)
++   })
++ }
+> 
+> 
+> # Test ratio
+> ratio1 <- safe_ratio(200, 120)
+> ratio2 <- safe_ratio(200, 0)
+Ratio Error: Cannot divide by zero BP.
+> ratio3 <- safe_ratio(200, NA)
+Ratio Error: Cholesterol or BP value is missing.
+> ratio4 <- safe_ratio(200, -10)
+Ratio Error: BP value is invalid.
+> 
+> cat("Valid ratio =", ratio1, "\n")
+Valid ratio = 1.666667 
+> cat("Zero denominator =", ratio2, "\n")
+Zero denominator = NA 
+> cat("Missing denominator =", ratio3, "\n")
+Missing denominator = NA 
+> cat("Invalid denominator =", ratio4, "\n")
+Invalid denominator = NA 
+> 
+> 
+> # ------------------------------------------------------------
+> # 8. LOOP-BASED DATA CLEANING
+> # ------------------------------------------------------------
+> 
+> bp_loop <- heart$trestbps
+> 
+> start_loop <- Sys.time()
+> 
+> for (i in seq_along(bp_loop)) {
++ 
++   if (is.na(bp_loop[i])) {
++     next
++   }
++ 
++   if (bp_loop[i] < 0) {
++     bp_loop[i] <- NA
++   }
++ 
++   else if (bp_loop[i] > 250) {
++     bp_loop[i] <- 250
++   }
++ }
+> 
+> end_loop <- Sys.time()
+> 
+> loop_time <- end_loop - start_loop
+> 
+> cat("Loop execution time:\n")
+Loop execution time:
+> print(loop_time)
+Time difference of 0.03451085 secs
+> 
+> 
+> # ------------------------------------------------------------
+> # 9. VECTORIZED DATA CLEANING
+> # ------------------------------------------------------------
+> 
+> bp_vectorized <- heart$trestbps
+> 
+> start_vector <- Sys.time()
+> 
+> # Negative values -> NA
+> bp_vectorized[bp_vectorized < 0] <- NA
+> 
+> # Values greater than 250 -> 250
+> bp_vectorized[bp_vectorized > 250] <- 250
+> 
+> end_vector <- Sys.time()
+> 
+> vector_time <- end_vector - start_vector
+> 
+> cat("Vectorized execution time:\n")
+Vectorized execution time:
+> print(vector_time)
+Time difference of 0.0144999 secs
+> 
+> 
+> # ------------------------------------------------------------
+> # 10. COMPARE LOOP AND VECTORIZED RESULTS
+> # ------------------------------------------------------------
+> 
+> comparison <- data.frame(
++   Original = heart$trestbps,
++   Loop_Cleaned = bp_loop,
++   Vectorized_Cleaned = bp_vectorized
++ )
+> 
+> head(comparison, 10)
+   Original Loop_Cleaned Vectorized_Cleaned
+1       -20           NA                 NA
+2       -50           NA                 NA
+3        NA           NA                 NA
+4       320          250                250
+5       350          250                250
+6       120          120                120
+7       140          140                140
+8       120          120                120
+9       130          130                130
+10      140          140                140
+> 
+> 
+> # Check whether both approaches produce the same result
+> same_result <- all.equal(
++   bp_loop,
++   bp_vectorized
++ )
+> 
+> cat("Are both results identical? ", same_result, "\n")
+Are both results identical?  TRUE 
+> 
+> 
+> # ------------------------------------------------------------
+> # 11. NUMERIC EXECUTION TIME COMPARISON
+> # ------------------------------------------------------------
+> 
+> loop_seconds <- as.numeric(loop_time, units = "secs")
+> vector_seconds <- as.numeric(vector_time, units = "secs")
+> 
+> performance <- data.frame(
++   Method = c("For Loop", "Vectorized"),
++   Time_Seconds = c(loop_seconds, vector_seconds)
++ )
+> 
+> print(performance)
+      Method Time_Seconds
+1   For Loop   0.03451085
+2 Vectorized   0.01449990
+> 
+> 
+> # ------------------------------------------------------------
+> # 12. VALIDATE CLEANED DATA
+> # ------------------------------------------------------------
+> 
+> # Count missing BP values
+> missing_bp <- sum(is.na(bp_vectorized))
+> 
+> cat("Number of missing BP values:", missing_bp, "\n")
+Number of missing BP values: 3 
+> 
+> 
+> # Minimum BP
+> min_bp <- min(bp_vectorized, na.rm = TRUE)
+> 
+> # Maximum BP
+> max_bp <- max(bp_vectorized, na.rm = TRUE)
+> 
+> # Mean BP
+> mean_bp <- mean(bp_vectorized, na.rm = TRUE)
+> 
+> # Median BP
+> median_bp <- median(bp_vectorized, na.rm = TRUE)
+> 
+> cat("Minimum BP:", min_bp, "\n")
+Minimum BP: 94 
+> cat("Maximum BP:", max_bp, "\n")
+Maximum BP: 250 
+> cat("Mean BP:", mean_bp, "\n")
+Mean BP: 132.39 
+> cat("Median BP:", median_bp, "\n")
+Median BP: 130 
+> 
+> 
+> # ------------------------------------------------------------
+> # 13. VERIFY NO NEGATIVE VALUES REMAIN
+> # ------------------------------------------------------------
+> 
+> negative_values <- sum(
++   bp_vectorized < 0,
++   na.rm = TRUE
++ )
+> 
+> greater_than_250 <- sum(
++   bp_vectorized > 250,
++   na.rm = TRUE
++ )
+> 
+> cat("Negative BP values remaining:", negative_values, "\n")
+Negative BP values remaining: 0 
+> cat("BP values >250 remaining:", greater_than_250, "\n")
+BP values >250 remaining: 0 
+> 
+> 
+> # ------------------------------------------------------------
+> # 14. CREATE FINAL CLEANED DATASET
+> # ------------------------------------------------------------
+> 
+> heart$trestbps <- bp_vectorized
+> 
+> # Remove temporary column
+> heart$trestbps_clean <- NULL
+> 
+> # Save cleaned dataset
+> write.csv(
++   heart,
++   "cleaned_heart_data.csv",
++   row.names = FALSE
++ )
+> 
+> cat("Cleaned dataset saved as cleaned_heart_data.csv\n")
+Cleaned dataset saved as cleaned_heart_data.csv
+> 
+> 
+> # ------------------------------------------------------------
+> # 15. FINAL SUMMARY
+> # ------------------------------------------------------------
+> 
+> cat("\n========================================\n")
+
+========================================
+> cat("       LAB 3 CLEANING SUMMARY\n")
+       LAB 3 CLEANING SUMMARY
+> cat("========================================\n")
+========================================
+> 
+> cat("Missing BP values:", missing_bp, "\n")
+Missing BP values: 3 
+> cat("Minimum BP:", min_bp, "\n")
+Minimum BP: 94 
+> cat("Maximum BP:", max_bp, "\n")
+Maximum BP: 250 
+> cat("Mean BP:", mean_bp, "\n")
+Mean BP: 132.39 
+> cat("Median BP:", median_bp, "\n")
+Median BP: 130 
+> cat("Negative values remaining:", negative_values, "\n")
+Negative values remaining: 0 
+> cat("Values >250 remaining:", greater_than_250, "\n")
+Values >250 remaining: 0 
+> 
+> cat("\nLoop time:", loop_seconds, "seconds\n")
+
+Loop time: 0.03451085 seconds
+> cat("Vectorized time:", vector_seconds, "seconds\n")
+Vectorized time: 0.0144999 seconds
+> 
+> cat("\nCleaning completed successfully.\n")
+
+Cleaning completed successfully.
+> 
